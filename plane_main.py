@@ -1,8 +1,14 @@
 from plane_sprites import *
-import random
-
-
 pygame.init()
+
+# 刷新频率
+FRAME_PRE_SEC = 60
+
+# 定义敌机出场事件
+CREATE_ENEMY_EVENT = pygame.USEREVENT
+
+# 定义敌机出场间隔时长
+PER_ENEMY_TIME = 1000
 
 
 class PlaneGame(object):
@@ -20,6 +26,8 @@ class PlaneGame(object):
         self.clock = pygame.time.Clock()
         # 调用私有方法，创建精灵和精灵组
         self.__create_sprites()
+        # 设置定时器事件
+        pygame.time.set_timer(CREATE_ENEMY_EVENT, PER_ENEMY_TIME)
 
     def start_game(self):
         """
@@ -41,6 +49,7 @@ class PlaneGame(object):
             # 刷新界面
             pygame.display.update()
 
+
     @staticmethod
     def __game_over():
         """
@@ -58,16 +67,12 @@ class PlaneGame(object):
         创建游戏精灵和精灵组
         """
         # 背景组
-        bg1 = GameSprite("./images/background.png")
-        bg2 = GameSprite("./images/background.png", [0, -SCREEN_SIZE.height])
-
+        bg1 = BackGround()
+        bg2 = BackGround(True)
         self.bg_group = pygame.sprite.Group(bg1, bg2)
 
         # 敌机组
-        enemy1 = GameSprite("./images/enemy1.png", [random.randint(0, SCREEN_SIZE.width), 0], [0, random.randint(1, 6)])
-        enemy2 = GameSprite("./images/enemy1.png", [random.randint(0, SCREEN_SIZE.width), 0], [0, random.randint(1, 6)])
-        enemy3 = GameSprite("./images/enemy1.png", [random.randint(0, SCREEN_SIZE.width), 0], [0, random.randint(1, 6)])
-        self.enemy_group = pygame.sprite.Group(enemy1, enemy2, enemy3)
+        self.enemy_group = pygame.sprite.Group()
 
         # 英雄组
         hero_rect = pygame.image.load("./images/me1.png").get_rect()
@@ -83,6 +88,8 @@ class PlaneGame(object):
 
             if event.type == pygame.QUIT:
                 PlaneGame.__game_over()
+            elif event.type == CREATE_ENEMY_EVENT:
+                self.enemy_group.add(Enemy())
 
     def __check_collide(self):
         """
