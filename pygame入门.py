@@ -1,4 +1,5 @@
-import sys, pygame
+import pygame
+import sys
 
 # 初始化
 
