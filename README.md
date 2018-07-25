@@ -30,7 +30,3 @@ python3.6 + pygame
         在主文件头部配置python3的路径  
         #!/Library/Frameworks/Python.framework/Versions/3.6/bin/python3  
         `./plane_main.py`
-
-![image-20180725140346395](/var/folders/36/548kwh3s5l78zy5s1vjngfkc0000gn/T/abnerworks.Typora/image-20180725140346395.png)
-
-![image-20180725140422167](/var/folders/36/548kwh3s5l78zy5s1vjngfkc0000gn/T/abnerworks.Typora/image-20180725140422167.png)
