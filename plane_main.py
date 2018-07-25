@@ -25,18 +25,22 @@ HERO_FIRE_EVENT = pygame.USEREVENT + 1
 PER_ENEMY_TIME = 1000
 
 # 子弹发射间隔时长
-PER_BULLET_TIME = 200
+PER_BULLET_TIME = 100
+
+# 游戏实例
+instance = None
 
 
 class PlaneGame(object):
     """
     飞机大战主游戏入口
     """
-
     def __init__(self):
         """
         游戏初始化
         """
+        # 游戏是否运行
+        self.running = False
         # 创建游戏窗口
         self.screen = pygame.display.set_mode(SCREEN_SIZE.size)
         # 创建时钟
@@ -50,6 +54,7 @@ class PlaneGame(object):
         """
         游戏开始
         """
+        self.running = True
         while 1:
             # 设置刷新频率
             self.clock.tick(FRAME_PRE_SEC)
@@ -89,6 +94,17 @@ class PlaneGame(object):
         # 设置子弹发射定时任务
         pygame.time.set_timer(HERO_FIRE_EVENT, PER_BULLET_TIME)
 
+    @staticmethod
+    def __stop_user_event():
+        """
+        取消定时任务
+        """
+        # 设置敌机出现定时任务
+        pygame.time.set_timer(CREATE_ENEMY_EVENT, 0)
+
+        # 设置子弹发射定时任务
+        pygame.time.set_timer(HERO_FIRE_EVENT, 0)
+
     def __create_sprites(self):
         """
         创建游戏精灵和精灵组
@@ -105,6 +121,18 @@ class PlaneGame(object):
         # 英雄组
         self.hero = Hero()
         self.hero_group = pygame.sprite.Group(self.hero)
+
+        self.running_list = [self.bg_group, self.enemy_group, self.destroy_enemy_group, self.hero_group,
+                             self.hero.bullet_group]
+        # 重新开始游戏
+        self.again = Again()
+        self.again_group = pygame.sprite.Group(self.again)
+
+        # 结束游戏
+        self.quit = Quit()
+        self.quit_group = pygame.sprite.Group(self.quit)
+
+        self.stop_list = [self.again_group, self.quit_group]
 
     def __event_handler(self):
         """
@@ -123,16 +151,34 @@ class PlaneGame(object):
                 # 集体自爆
                 for enemy in self.enemy_group.sprites():
                     enemy.destroied()
+        # 检测用户鼠标操作 如果用户按下鼠标左键
+        if pygame.mouse.get_pressed()[0]:
+            # 获取鼠标坐标
+            pos = pygame.mouse.get_pos()
+            # 获取结束游戏 重新开始按钮区域坐标
+            quit_rect = self.quit.rect
+            again_rect = self.again.rect
+            if quit_rect.left < pos[0] < quit_rect.right \
+                    and quit_rect.top < pos[1] < quit_rect.bottom:
+                # 结束游戏
+                PlaneGame.__game_over()
+            elif again_rect.left < pos[0] < again_rect.right \
+                    and again_rect.top < pos[1] < again_rect.bottom:
+                print("点击了重新开始")
+                # 重新开始游戏
+                global instance
+                instance = PlaneGame()
+                instance.start_game()
 
         if self.hero.can_destroied:
-            PlaneGame.__game_over()
+            self.running = False
+        else:
+            # 通过pygame.key 获取用户按键
+            keys_pressed = pygame.key.get_pressed()
 
-        # 通过pygame.key 获取用户按键
-        keys_pressed = pygame.key.get_pressed()
+            direct = keys_pressed[pygame.K_RIGHT] - keys_pressed[pygame.K_LEFT]
 
-        direct = keys_pressed[pygame.K_RIGHT] - keys_pressed[pygame.K_LEFT]
-
-        self.hero.speed = [direct * 6, 0]
+            self.hero.speed = [direct * 6, 0]
 
     def __check_collide(self):
         """
@@ -150,21 +196,31 @@ class PlaneGame(object):
                 enemy.destroied()
 
         # 敌机撞毁英雄
-        for hero in pygame.sprite.spritecollide(self.hero, self.enemy_group, True):
+        hero = pygame.sprite.spritecollide(self.hero, self.enemy_group, True)
+        if len(hero) > 0:
             self.hero.destroied()
 
     def __update_sprites(self):
         """
         更新精灵组
         """
-        for group in [self.bg_group, self.enemy_group, self.hero_group, self.hero.bullet_group,
-                      self.destroy_enemy_group]:
-            group.update()
-            group.draw(self.screen)
+        if self.running:
+            for group in [self.bg_group, self.enemy_group, self.hero_group, self.hero.bullet_group,
+                          self.destroy_enemy_group]:
+                group.update()
+                group.draw(self.screen)
+        else:
+            # 停止定时任务
+            PlaneGame.__stop_user_event()
+            # 清空背景等精灵，生成退出游戏重新开始按钮
+            for group in self.running_list:
+                group.empty()
+            for group in self.stop_list:
+                group.update()
+                group.draw(self.screen)
 
 
 if __name__ == '__main__':
     # 创建游戏对象
-    game = PlaneGame()
-    # 开始游戏
-    game.start_game()
+    instance = PlaneGame()
+    instance.start_game()

@@ -44,6 +44,26 @@ class GameSprite(pygame.sprite.Sprite):
         return images
 
 
+class Again(GameSprite):
+    """
+    重新开始
+    """
+    def __init__(self):
+        super().__init__("./images/again.png", speed=[0, 0])
+        self.rect.centerx = SCREEN_SIZE.centerx
+        self.rect.centery = SCREEN_SIZE.centery - 50
+
+
+class Quit(GameSprite):
+    """
+    退出游戏
+    """
+    def __init__(self):
+        super().__init__("./images/gameover.png", speed=[0, 0])
+        self.rect.centerx = SCREEN_SIZE.centerx
+        self.rect.centery = SCREEN_SIZE.centery + 50
+
+
 class BackGround(GameSprite):
     """
     背景类
@@ -118,8 +138,10 @@ class PlaneSprite(GameSprite):
         if self.is_loop_show:
             self.show_image_index %= len(self.images)
         elif self.show_image_index > count - 1:
-            self.show_image_index = count - 1
+            # self.show_image_index = count - 1
             self.can_destroied = True
+            self.kill()
+            return
 
         current_index = int(self.show_image_index)
         print("current_index = %d" % current_index)
@@ -168,7 +190,6 @@ class Hero(PlaneSprite):
             self.rect.left = 0
         elif self.rect.right > SCREEN_SIZE.right:
             self.rect.right = SCREEN_SIZE.right
-        pass
 
     def fire(self):
         """
